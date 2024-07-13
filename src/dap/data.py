@@ -1,13 +1,15 @@
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+from .types import Message
 
 
 class ProtocolMessage(BaseModel):
     """Base class of requests, responses, and events"""
 
     seq: int = Field(..., description="Sequence number (message ID) of the message.")
-    type: Union[Literal["request", "response", "event"], str] = Field(
+    type: Literal["request", "response", "event"] | str = Field(
         ..., description="Message type."
     )
 
@@ -16,7 +18,7 @@ class Request(ProtocolMessage):
     type: str = "request"
     command: str = Field(..., description="The command to execute.")
     arguments: Optional[Any] = Field(
-        ..., description="Object containing arguments for the command."
+        None, description="Object containing arguments for the command."
     )
 
 
@@ -35,7 +37,7 @@ class Response(ProtocolMessage):
         ..., description="Indicates whether the request was successful."
     )
     command: str = Field(..., description="The command requested.")
-    message: Optional[Union[Literal["cancelled", "notStopped"], str]] = Field(
+    message: Optional[Literal["cancelled", "notStopped"] | str] = Field(
         None, description="Raw error message if success is False."
     )
     body: Optional[Any] = Field(
@@ -44,15 +46,14 @@ class Response(ProtocolMessage):
 
 
 class ErrorBody(BaseModel):
-    # TODO use Message object
-    error: Optional[Any] = Field(
-        ...,
+    error: Optional[Message] = Field(
+        None,
         description="Error details.",
     )
 
 
 class ErrorResponse(Response):
-    body: ErrorBody = Field(..., description="Error details.")
+    body: ErrorBody = Field(..., description="A structured error message.")
 
 
-DAPMessage = Union[Request, Response, Event]
+DAPMessage = Request | Response | Event
