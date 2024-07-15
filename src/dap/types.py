@@ -695,7 +695,7 @@ class StackFrame(BaseModel):
     )
 
 
-class StackFrameTarget(BaseModel):
+class StackFrameFormat(BaseModel):
     parameters: Optional[bool] = Field(
         None, description="Displays parameters for the stack frame."
     )

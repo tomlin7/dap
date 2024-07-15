@@ -543,3 +543,322 @@ class Client:
                 "exceptionOptions": exception_options,
             },
         )
+
+    def set_expression(
+        self,
+        expression: str,
+        value: str,
+        frame_id: Optional[int] = None,
+        format: Optional[ValueFormat] = None,
+    ) -> int:
+        """Evaluates the given value expression and assigns it to the expression which must be a modifiable l-value.
+
+        The expressions have access to any variables and arguments that are in scope of the specified frame.
+
+        Args:
+            expression: The l-value expression to assign the result to.
+            value: The value expression to assign to the l-value expression.
+            frame_id: Evaluate the expressions in the scope of this stack frame. \
+                If not specified, the expressions are evaluated in the global scope.
+            format: Specifies details on how to format the result.
+        """
+
+        return self._send_request(
+            "setExpression",
+            {
+                "expression": expression,
+                "value": value,
+                "frameId": frame_id,
+                "format": format,
+            },
+        )
+
+    def set_function_breakpoints(
+        self, breakpoints: List[FunctionBreakpoint] = []
+    ) -> int:
+        """Replaces all existing function breakpoints with new function breakpoints.
+
+        To clear all function breakpoints, call this without arguments.
+        When a function breakpoint is hit, a stopped event (with reason function breakpoint) is generated.
+
+        Args:
+            breakpoints: The function breakpoints to set.
+        """
+
+        return self._send_request(
+            "setFunctionBreakpoints", {"breakpoints": breakpoints}
+        )
+
+    def set_instruction_breakpoints(
+        self, breakpoints: List[InstructionBreakpoint]
+    ) -> int:
+        """Replaces all existing instruction breakpoints. Typically, instruction breakpoints would be set from a disassembly window.
+
+        To clear all instruction breakpoints, specify an empty array.
+        When an instruction breakpoint is hit, a stopped event (with reason instruction breakpoint) is generated.
+
+        Args:
+            breakpoints: The instruction breakpoints to set.
+        """
+
+        return self._send_request(
+            "setInstructionBreakpoints", {"breakpoints": breakpoints}
+        )
+
+    def set_variable(
+        self,
+        variables_reference: int,
+        name: str,
+        value: str,
+        format: Optional[ValueFormat] = None,
+    ) -> int:
+        """Set the variable with the given name in the variable container to a new value.
+
+        Args:
+            variables_reference: The reference of the variable container.
+            name: The name of the variable to set.
+            value: The value to set.
+            format: Specifies details on how to format the response value.
+        """
+
+        return self._send_request(
+            "setVariable",
+            {
+                "variablesReference": variables_reference,
+                "name": name,
+                "value": value,
+                "format": format,
+            },
+        )
+
+    def source(self, source_reference: int, source: Optional[Source] = None) -> int:
+        """The request retrieves the source code for a given source reference.
+
+        Args:
+            source_reference: The reference to the source. This is the same as `source.sourceReference`.
+            source: Specifies the source content to load. Either `source.path` or `source.sourceReference` must be specified.
+        """
+
+        return self._send_request(
+            "source", {"sourceReference": source_reference, "source": source}
+        )
+
+    def stack_trace(
+        self,
+        thread_id: Optional[int] = None,
+        start_frame: Optional[int] = None,
+        levels: Optional[int] = None,
+        format: Optional[StackFrameFormat] = None,
+    ) -> int:
+        """The request returns a stack trace from the current execution state.
+
+        Request all stack frames by omitting the startFrame and levels arguments.
+
+        Args:
+            thread_id: Retrieve the stacktrace for this thread.
+            start_frame: The index of the first frame to return; if omitted frames start at 0.
+            levels: The maximum number of frames to return. If levels is not specified or 0, all frames are returned.
+            format: Specifies details on how to format the stack frames.
+        """
+
+        return self._send_request(
+            "stackTrace",
+            {
+                "threadId": thread_id,
+                "startFrame": start_frame,
+                "levels": levels,
+                "format": format,
+            },
+        )
+
+    def step_back(
+        self,
+        thread_id: int,
+        single_thread: Optional[bool] = None,
+        granularity: Optional[SteppingGranularity] = None,
+    ) -> int:
+        """The request executes one backward step (in the given granularity) for the specified thread
+        and allows all other threads to run backward freely by resuming them.
+
+        If the debug adapter supports single thread execution (see capability `supportsSingleThreadExecutionRequests`),
+        setting the singleThread argument to true prevents other suspended threads from resuming.
+        The debug adapter first sends the response and then a stopped event (with reason step) after the step has completed.
+
+        Args:
+            thread_id: ID of the active thread.
+            single_thread: If true, backward execution is limited to the specified thread.
+            granularity: The granularity of the step, assumed to be 'statement' if not specified.
+        """
+
+        return self._send_request(
+            "stepBack",
+            {
+                "threadId": thread_id,
+                "singleThread": single_thread,
+                "granularity": granularity,
+            },
+        )
+
+    def step_in(
+        self,
+        thread_id: int,
+        single_thread: Optional[bool] = None,
+        target_id: Optional[int] = None,
+        granularity: Optional[SteppingGranularity] = None,
+    ) -> int:
+        """The request resumes the given thread to step into a function/method and allows all other threads to run freely by resuming them.
+
+        If the debug adapter supports single thread execution (see capability `supportsSingleThreadExecutionRequests`),
+        setting the singleThread argument to true prevents other suspended threads from resuming.
+
+        If the request cannot step into a target, stepIn behaves like the next request.
+        The debug adapter first sends the response and then a stopped event (with reason step) after the step has completed.
+
+        If there are multiple function/method calls (or other targets) on the source line,
+        the argument targetId can be used to control into which target the stepIn should occur.
+
+        Args:
+            thread_id: ID of the active thread.
+            single_thread: If true, stepIn is limited to the specified thread.
+            target_id: The stepIn target for this step.
+            granularity: The granularity of the step, assumed to be 'statement' if not specified.
+        """
+
+        return self._send_request(
+            "stepIn",
+            {
+                "threadId": thread_id,
+                "singleThread": single_thread,
+                "targetId": target_id,
+                "granularity": granularity,
+            },
+        )
+
+    def step_in_targets(self, frame_id: int) -> int:
+        """The request retrieves the possible stepIn targets for the specified stack frame.
+        These targets can be used in the stepIn request.
+
+        Args:
+            frame_id: The stack frame for which to retrieve the possible stepIn targets.
+        """
+
+        return self._send_request("stepInTargets", {"frameId": frame_id})
+
+    def step_out(
+        self,
+        thread_id: int,
+        single_thread: Optional[bool] = None,
+        granularity: Optional[SteppingGranularity] = None,
+    ) -> int:
+        """The request resumes the given thread to step out of the current function/method and allows all other threads to run freely by resuming them.
+
+        If the debug adapter supports single thread execution (see capability `supportsSingleThreadExecutionRequests`),
+        setting the singleThread argument to true prevents other suspended threads from resuming.
+
+        The debug adapter first sends the response and then a stopped event (with reason step) after the step has completed.
+
+        Args:
+            thread_id: ID of the active thread.
+            single_thread: If true, stepOut is limited to the specified thread.
+            granularity: The granularity of the step, assumed to be 'statement' if not specified.
+        """
+
+        return self._send_request(
+            "stepOut",
+            {
+                "threadId": thread_id,
+                "singleThread": single_thread,
+                "granularity": granularity,
+            },
+        )
+
+    def terminate(self, restart: Optional[bool] = None) -> int:
+        """The terminate request is sent from the client to the debug adapter in order to shut down the debuggee gracefully.
+
+        Typically a debug adapter implements terminate by sending a software signal which the debuggee intercepts in order
+        to clean things up properly before terminating itself.
+
+        Please note that this request does not directly affect the state of the debug session: if the debuggee decides to
+        veto the graceful shutdown for any reason by not terminating itself, then the debug session just continues.
+
+        Args:
+            restart: A value of true indicates that this 'terminate' request is part of a restart sequence.
+        """
+
+        return self._send_request("terminate", {"restart": restart})
+
+    def terminate_threads(self, thread_ids: List[int]) -> int:
+        """The request terminates the threads with the given ids.
+
+        Args:
+            thread_ids: The threads to terminate.
+        """
+
+        return self._send_request("terminateThreads", {"threadIds": thread_ids})
+
+    def threads(self) -> int:
+        """The request retrieves a list of all threads.
+
+        Args:
+            reason: The reason for the event.
+        """
+
+        return self._send_request("threads")
+
+    def variables(
+        self,
+        variables_reference: int,
+        filter: Optional[Literal["indexed", "named"]] | str = None,
+        start: Optional[int] = None,
+        count: Optional[int] = None,
+        format: Optional[ValueFormat] = None,
+    ) -> int:
+        """Retrieves all child variables for the given variable reference.
+
+        A filter can be used to limit the fetched children to either named or indexed children.
+
+        Args:
+            variables_reference: The variable for which to retrieve its children.
+            filter: Filter to limit the child variables to either named or indexed. If not specified, both types are fetched.
+            start: The index of the first variable to return; if omitted variables start at 0.
+            count: The number of variables to return. If not passed or 0, all variables are returned.
+            format: Specifies details on how to format the response value.
+        """
+
+        return self._send_request(
+            "variables",
+            {
+                "variablesReference": variables_reference,
+                "filter": filter,
+                "start": start,
+                "count": count,
+                "format": format,
+            },
+        )
+
+    def write_memory(
+        self,
+        memory_reference: str,
+        data: str,
+        offset: Optional[int] = None,
+        allow_partial: Optional[bool] = None,
+    ) -> int:
+        """Writes bytes to memory at the provided location.
+
+        Args:
+            memory_reference: The memory reference to the base location to write memory.
+            data: Bytes to write, encoded using base64.
+            offset: The offset (in bytes) of the first byte to write. Can be negative.
+            allow_partial: Property to control partial writes. If true, the debug adapter should \
+                attempt to write memory even if the entire memory region is not writable.
+        """
+
+        return self._send_request(
+            "writeMemory",
+            {
+                "memoryReference": memory_reference,
+                "offset": offset,
+                "data": data,
+                "allowPartial": allow_partial,
+            },
+        )
