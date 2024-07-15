@@ -2,10 +2,11 @@ from typing import Dict, Optional
 
 from .buffer import *
 from .data import *
+from .requests import *
 from .types import *
 
 
-class DAPClient:
+class Client:
     def __init__(self):
         self._seq: int = 0
         self._send_buf = bytearray()
@@ -296,4 +297,249 @@ class DAPClient:
 
         return self._send_request(
             "gotoTargets", {"source": source, "line": line, "column": column}
+        )
+
+    def initialize(
+        self,
+        adapter_id: str,
+        client_id: Optional[str] = None,
+        client_name: Optional[str] = None,
+        locale: Optional[str] = None,
+        lines_start_at1: Optional[bool] = None,
+        columns_start_at1: Optional[bool] = None,
+        path_format: Optional[Literal["path", "uri"] | str] = None,
+        supports_variable_type: Optional[bool] = None,
+        supports_variable_paging: Optional[bool] = None,
+        supports_run_in_terminal_request: Optional[bool] = None,
+        supports_memory_references: Optional[bool] = None,
+        supports_progress_reporting: Optional[bool] = None,
+        supports_invalidated_event: Optional[bool] = None,
+        supports_memory_event: Optional[bool] = None,
+        supports_args_can_be_interpreted_by_shell: Optional[bool] = None,
+        supports_start_debugging_request: Optional[bool] = None,
+    ) -> int:
+        """Initializes the debug adapter with the client capabilities."""
+
+        return self._send_request(
+            "initialize",
+            {
+                "adapterID": adapter_id,
+                "clientID": client_id,
+                "clientName": client_name,
+                "locale": locale,
+                "linesStartAt1": lines_start_at1,
+                "columnsStartAt1": columns_start_at1,
+                "pathFormat": path_format,
+                "supportsVariableType": supports_variable_type,
+                "supportsVariablePaging": supports_variable_paging,
+                "supportsRunInTerminalRequest": supports_run_in_terminal_request,
+                "supportsMemoryReferences": supports_memory_references,
+                "supportsProgressReporting": supports_progress_reporting,
+                "supportsInvalidatedEvent": supports_invalidated_event,
+                "supportsMemoryEvent": supports_memory_event,
+                "supportsArgsCanBeNull": supports_args_can_be_interpreted_by_shell,
+                "supportsStartDebuggingRequest": supports_start_debugging_request,
+            },
+        )
+
+    def launch(
+        self,
+        no_debug: Optional[bool] = None,
+        __restart: Optional[Any] = None,
+    ) -> int:
+        """The launch request is used to start the debuggee with or without debugging enabled.
+        
+        Args:
+            no_debug: Set to true if the launch request is used to just start the debuggee \
+                for the purpose of collecting output. The debuggee is not supposed to stop at breakpoints.
+            __restart: Arbitrary data from the previous, restarted session. \
+                The data is sent as the `restart` attribute of the `terminated` event.
+        """
+
+        return self._send_request(
+            "launch",
+            {"noDebug": no_debug, "__restart": __restart},
+        )
+
+    def loaded_sources(self) -> int:
+        """Retrieves the set of all sources currently loaded by the debugged process.
+
+        Args:
+            reason: The reason for the event.
+        """
+
+        return self._send_request("loadedSources")
+
+    def modules(
+        self, start_module: Optional[int] = None, module_count: Optional[int] = None
+    ) -> int:
+        """Modules can be retrieved from the debug adapter with this request which can either
+        return all modules or a range of modules to support paging.
+
+        Args:
+            start_module: The 0-based index of the first module to return; if omitted modules start at 0.
+            module_count: The number of modules to return. If moduleCount is not specified or 0, \
+                all modules are returned.
+        """
+
+        return self._send_request(
+            "modules", {"startModule": start_module, "moduleCount": module_count}
+        )
+
+    def next(
+        self,
+        thread_id: int,
+        single_thread: Optional[bool] = None,
+        granularity: Optional[str] = None,
+    ) -> int:
+        """The request steps through the program.
+
+        Args:
+            thread_id: Specifies the thread for which to resume execution for one step.
+            single_thread: If this is true, all other suspended threads are not resumed.
+            granularity: The granularity of the step, assumed to be 'statement' if not specified.
+        """
+
+        return self._send_request(
+            "next",
+            {
+                "threadId": thread_id,
+                "singleThread": single_thread,
+                "granularity": granularity,
+            },
+        )
+
+    def pause(self, thread_id: int) -> int:
+        """Suspends the debuggee.
+
+        Args:
+            thread_id: The thread to pause.
+        """
+
+        return self._send_request("pause", {"threadId": thread_id})
+
+    def read_memory(
+        self, memory_reference: str, count: int, offset: Optional[int] = None
+    ) -> int:
+        """Reads memory from the debuggee.
+
+        Args:
+            memory_reference: The memory reference to the base location from which to read memory.
+            count: The number of bytes to read at the specified location and offset.
+            offset: The offset (in bytes) of the first byte to read.
+        """
+
+        return self._send_request(
+            "readMemory",
+            {"memoryReference": memory_reference, "offset": offset, "count": count},
+        )
+
+    def restart(
+        self,
+        arguments: Optional[LaunchRequestArguments | AttachRequestArguments] = None,
+    ) -> int:
+        """Restarts a debug session.
+
+        Args:
+            arguments: Use either arguments for the 'launch' or 'attach' request.
+        """
+
+        return self._send_request("restart", arguments)
+
+    def restart_frame(self, frame_id: int) -> int:
+        """Restart the stack frame identified by the given frame ID.
+        The frame ID must have been obtained in the current suspended state.
+
+        Args:
+            frame_id: The frame to restart.
+        """
+
+        return self._send_request("restartFrame", {"frameId": frame_id})
+
+    def reverse_continue(
+        self, thread_id: int, single_thread: Optional[bool] = None
+    ) -> int:
+        """The request starts the debuggee to run backward.
+
+        Args:
+            thread_id: ID of the active thread.
+            single_thread: If true, backward execution is limited to the specified thread.
+        """
+
+        return self._send_request(
+            "reverseContinue",
+            {"threadId": thread_id, "singleThread": single_thread},
+        )
+
+    def scopes(self, frame_id: int) -> int:
+        """The request returns the variable scopes for a given stack frame.
+
+        Args:
+            frame_id: Retrieve the scopes for this stackframe.
+        """
+
+        return self._send_request("scopes", {"frameId": frame_id})
+
+    def set_breakpoints(
+        self,
+        source: Source,
+        breakpoints: List[SourceBreakpoint],
+        lines: Optional[List[int]] = None,
+        source_modified: Optional[bool] = None,
+    ) -> int:
+        """Sets multiple breakpoints for a single source and clears all previous breakpoints in that source.
+
+        Args:
+            source: The source location of the breakpoints.
+            breakpoints: The code locations of the breakpoints.
+            lines: The source lines of the breakpoints.
+            source_modified: A value of true indicates that the underlying source has been modified \
+                which results in new breakpoint locations.
+        """
+
+        return self._send_request(
+            "setBreakpoints",
+            {
+                "source": source,
+                "breakpoints": breakpoints,
+                "lines": lines,
+                "sourceModified": source_modified,
+            },
+        )
+
+    def set_data_breakpoints(self, breakpoints: List[DataBreakpoint]) -> int:
+        """Replaces all existing data breakpoints with new data breakpoints.
+
+        Args:
+            breakpoints: The data breakpoints to set.
+        """
+
+        return self._send_request("setDataBreakpoints", {"breakpoints": breakpoints})
+
+    def set_exception_breakpoints(
+        self,
+        filters: List[str],
+        filter_options: Optional[List[ExceptionFilterOptions]],
+        exception_options: Optional[List[ExceptionOptions]],
+    ) -> int:
+        """The request configures the debugger's response to thrown exceptions.
+
+        Each of the filters, filterOptions, and exceptionOptions in the request are independent configurations
+        to a debug adapter indicating a kind of exception to catch. An exception thrown in a program should result
+        in a stopped event from the debug adapter (with reason exception) if any of the configured filters match.
+
+        Args:
+            filters: Set of exception filters specified by their ID.
+            filter_options: An array of ExceptionFilterOptions. The set of all possible exception filters \
+                is defined by the `exceptionBreakpointFilters` capability.
+            exception_options: An array of ExceptionOptions. Configuration options for selected exceptions.
+        """
+
+        return self._send_request(
+            "setExceptionBreakpoints",
+            {
+                "filters": filters,
+                "filterOptions": filter_options,
+                "exceptionOptions": exception_options,
+            },
         )
