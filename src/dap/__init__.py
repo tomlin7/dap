@@ -1,4 +1,4 @@
-__version__ = "0.1.5"
+__version__ = "0.2.5"
 __version_info__ = tuple(map(int, __version__.split(".")))
 __author__ = "tomlin7"
 
@@ -24,3 +24,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
+from .asynchronous import AsyncConnection, AsyncServer
+from .client import Client
+from .connection import Connection
+from .server import Server
