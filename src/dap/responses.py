@@ -308,11 +308,99 @@ class SetExceptionBreakpointsResponse(Response):
     )
 
 
+class SetExpressionResponseBody(ResponseBody):
+    """Body of a 'setExpression' response."""
+
+    value: str = Field(..., description="The value of the expression.")
+    type: Optional[str] = Field(None, description="The type of the expression.")
+    presentationHint: Optional[VariablePresentationHint] = Field(
+        None, description="The presentation hint of the expression."
+    )
+    variablesReference: Optional[int] = Field(
+        None,
+        description="The reference to the variables of the expression result.",
+    )
+    namedVariables: Optional[int] = Field(
+        None, description="The number of named variables."
+    )
+    indexedVariables: Optional[int] = Field(
+        None, description="The number of indexed variables."
+    )
+    memoryReference: Optional[str] = Field(
+        None, description="The memory reference of the expression."
+    )
+
+
+class SetFunctionBreakpointsResponseBody(ResponseBody):
+    """Body of a 'setFunctionBreakpoints' response."""
+
+    breakpoints: list[FunctionBreakpoint] = Field(
+        ..., description="List of function breakpoints."
+    )
+
+
+class SetFunctionBreakpointsResponse(Response):
+    """Response to 'setFunctionBreakpoints' request."""
+
+    body: SetFunctionBreakpointsResponseBody
+
+
+class SetInstructionBreakpointsResponseBody(ResponseBody):
+    """Body of a 'setInstructionBreakpoints' response."""
+
+    breakpoints: list[Breakpoint]
+
+
+class SetInstructionBreakpointsResponse(Response):
+    """Response to 'setInstructionBreakpoints' request."""
+
+    body: SetInstructionBreakpointsResponseBody
+
+
+class SetVariableResponseBody(ResponseBody):
+    """Body of a 'setVariable' response."""
+
+    value: str = Field(..., description="The value of the variable.")
+    type: Optional[str] = Field(None, description="The type of the variable.")
+    variablesReference: Optional[int] = Field(
+        None,
+        description="The reference to the variables of the variable result.",
+    )
+    namedVariables: Optional[int] = Field(
+        None, description="The number of named variables."
+    )
+    indexedVariables: Optional[int] = Field(
+        None, description="The number of indexed variables."
+    )
+    memoryReference: Optional[str] = Field(
+        None, description="The memory reference of the variable."
+    )
+
+
+class SetVariableResponse(Response):
+    """Response to 'setVariable' request."""
+
+    body: SetVariableResponseBody
+
+
+class SourceResponseBody(ResponseBody):
+    """Body of a 'source' response."""
+
+    content: str = Field(..., description="The content of the source.")
+    mimeType: Optional[str] = Field(None, description="The MIME type of the source.")
+
+
+class SourceResponse(Response):
+    """Response to 'source' request."""
+
+    body: SourceResponseBody
+
+
 class StackTraceResponseBody(ResponseBody):
     """Body of a 'stackTrace' response."""
 
-    stackFrames: list[StackFrame]
-    totalFrames: int
+    stackFrames: list[StackFrame] = Field(..., description="List of stack frames.")
+    totalFrames: Optional[int] = Field(None, description="The total number of frames.")
 
 
 class StackTraceResponse(Response):
@@ -321,10 +409,28 @@ class StackTraceResponse(Response):
     body: StackTraceResponseBody
 
 
+class StepBackResponse(Response):
+    """Response to 'stepBack' request."""
+
+    ...
+
+
 class StepInResponse(Response):
     """Response to 'stepIn' request."""
 
     ...
+
+
+class StepInTargetsResponseBody(ResponseBody):
+    """Body of a 'stepInTargets' response."""
+
+    targets: list[StepInTarget] = Field(..., description="List of step in targets.")
+
+
+class StepInTargetsResponse(Response):
+    """Response to 'stepInTargets' request."""
+
+    body: StepInTargetsResponseBody
 
 
 class StepOutResponse(Response):
@@ -333,10 +439,22 @@ class StepOutResponse(Response):
     ...
 
 
+class TerminateResponse(Response):
+    """Response to 'terminate' request."""
+
+    ...
+
+
+class TerminateThreadsResponse(Response):
+    """Response to 'terminateThreads' request."""
+
+    ...
+
+
 class ThreadsResponseBody(ResponseBody):
     """Body of a 'threads' response."""
 
-    threads: list[Thread]
+    threads: list[Thread] = Field(..., description="List of threads.")
 
 
 class ThreadsResponse(Response):
@@ -348,10 +466,19 @@ class ThreadsResponse(Response):
 class VariablesResponseBody(ResponseBody):
     """Body of a 'variables' response."""
 
-    variables: list[Variable]
+    variables: list[Variable] = Field(..., description="List of variables.")
 
 
 class VariablesResponse(Response):
     """Response to 'variables' request."""
 
     body: VariablesResponseBody
+
+
+class WriteMemoryResponseBody(ResponseBody):
+    """Body of a 'writeMemory' response."""
+
+    offset: Optional[int] = Field(None, description="The offset of the memory write.")
+    bytesWritten: Optional[int] = Field(
+        None, description="The number of bytes written."
+    )
