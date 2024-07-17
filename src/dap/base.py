@@ -28,6 +28,12 @@ class Event(ProtocolMessage):
     body: Optional[Any] = Field(None, description="Event-specific information.")
 
 
+class ResponseBody(BaseModel):
+    """Body of a response message."""
+
+    ...
+
+
 class Response(ProtocolMessage):
     type: str = "response"
     request_seq: int = Field(
@@ -40,7 +46,7 @@ class Response(ProtocolMessage):
     message: Optional[Literal["cancelled", "notStopped"] | str] = Field(
         None, description="Raw error message if success is False."
     )
-    body: Optional[Any] = Field(
+    body: Optional[ResponseBody] = Field(
         None, description="Request result if success is true, error details otherwise."
     )
 
