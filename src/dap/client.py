@@ -1,28 +1,102 @@
-from typing import Dict, Optional
+import json
+from typing import Optional
 
-from .buffer import *
-from .data import *
-from .requests import *
+from .buffer import RequestBuffer
+from .requests import AttachRequestArguments, LaunchRequestArguments
 from .types import *
 
 
 class Client:
-    def __init__(self):
-        self._seq: int = 0
+    """Debug Adapter Protocol (DAP) Client implementation without connection handling.
+
+    The client is responsible for sending requests and receiving events from the debug adapter.
+    It is up to the user to handle the connection to the debug adapter, making it more flexible.
+
+    The client can be used in a synchronous or asynchronous manner, depending on the user's needs.
+    """
+
+    def __init__(
+        self,
+        adapter_id: str,
+        client_id: Optional[str] = None,
+        client_name: Optional[str] = None,
+        locale: Optional[str] = None,
+        lines_start_at1: Optional[bool] = None,
+        columns_start_at1: Optional[bool] = None,
+        path_format: Optional[Literal["path", "uri"] | str] = None,
+    ) -> None:
+        """Initializes the debug adapter client.
+
+        Args:
+            adapter_id: The ID of the debug adapter.
+            client_id: The ID of the client.
+            client_name: The name of the client.
+            locale: The locale of the client.
+            lines_start_at1: Whether the lines start at 1.
+            columns_start_at1: Whether the columns start at 1.
+            path_format: The format of the paths.
+        """
+
+        self._seq: int = 1
         self._send_buf = bytearray()
+        self._receive_buf = bytearray()
+        self._pending_requests = {}
+
+        self.initialize(
+            adapter_id=adapter_id,
+            client_id=client_id,
+            client_name=client_name,
+            locale=locale,
+            lines_start_at1=lines_start_at1,
+            columns_start_at1=columns_start_at1,
+            path_format=path_format,
+            supports_variable_type=True,
+            supports_variable_paging=True,
+            supports_run_in_terminal_request=True,
+            supports_memory_references=True,
+            supports_progress_reporting=True,
+            supports_invalidated_event=True,
+            supports_memory_event=True,
+            supports_args_can_be_interpreted_by_shell=True,
+            supports_start_debugging_request=True,
+        )
 
     def _send_request(
-        self, method: str, params: Optional[dict[str, Any]] = None
+        self, command: str, arguments: Optional[dict[str, Any]] = None
     ) -> int:
-        id = self._seq
+        seq = self._seq
         self._seq += 1
 
-        self._send_buf += RequestBuffer(method=method, params=params, id=id)
-        return id
+        self._pending_requests[seq] = command
+        self._send_buf += RequestBuffer(seq, command, arguments)
+        return seq
 
-    def _handle_response(self, response: Response) -> Optional[Response]: ...
+    def receive(self, data: bytes) -> list[dict]:
+        self._receive_buf += data
+        events = []
+        while b"\r\n\r\n" in self._receive_buf:
+            headers, content = self._receive_buf.split(b"\r\n\r\n", 1)
+            content_length = int(headers.decode().split(":")[1].strip())
+            if len(content) >= content_length:
+                event_data = content[:content_length]
+                self._receive_buf = content[content_length:]
+                event = json.loads(event_data)
+                events.append(self._handle_event(event))
+            else:
+                break
+        return events
 
-    def send(self, command: str, arguments: Optional[Dict[str, any]] = None) -> bytes:
+    def _handle_event(self, event: dict) -> dict:
+        if event["type"] == "response":
+            request_seq = event["request_seq"]
+            if request_seq in self._pending_requests:
+                command = self._pending_requests.pop(request_seq)
+                print(f"Received response for {command}: ", json.dumps(event, indent=2))
+        elif event["type"] == "event":
+            print(f"Received event: ", json.dumps(event, indent=2))
+        return event
+
+    def send(self) -> bytes:
         send_buf = self._send_buf
         self._send_buf = bytearray()
         return send_buf
@@ -337,7 +411,7 @@ class Client:
                 "supportsProgressReporting": supports_progress_reporting,
                 "supportsInvalidatedEvent": supports_invalidated_event,
                 "supportsMemoryEvent": supports_memory_event,
-                "supportsArgsCanBeNull": supports_args_can_be_interpreted_by_shell,
+                "supportsArgsCanBeInterpretedByShell": supports_args_can_be_interpreted_by_shell,
                 "supportsStartDebuggingRequest": supports_start_debugging_request,
             },
         )
@@ -492,7 +566,7 @@ class Client:
         Args:
             source: The source location of the breakpoints.
             breakpoints: The code locations of the breakpoints.
-            lines: The source lines of the breakpoints.
+            lines: Deprecated: The code locations of the breakpoints.
             source_modified: A value of true indicates that the underlying source has been modified \
                 which results in new breakpoint locations.
         """
