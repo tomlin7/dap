@@ -23,10 +23,18 @@ class Request(ProtocolMessage):
     )
 
 
+class EventBody(BaseModel):
+    """Base class of event bodies"""
+
+    ...
+
+
 class Event(ProtocolMessage):
     type: str = "event"
     event: str = Field(..., description="The event type.")
-    body: Optional[Any] = Field(None, description="Event-specific information.")
+    body: Optional[dict[str, Any] | Any] = Field(
+        None, description="Event-specific information."
+    )
 
 
 class ResponseBody(BaseModel):
@@ -67,3 +75,72 @@ class DAPMessage(StrEnum):
     REQUEST = "request"
     RESPONSE = "response"
     EVENT = "event"
+
+
+class Requests(StrEnum):
+    """Enumeration of DAP requests."""
+
+    CANCEL = "cancel"
+    ATTACH = "attach"
+    BREAKPOINTLOCATIONS = "breakpointLocations"
+    COMPLETIONS = "completions"
+    CONFIGURATIONDONE = "configurationDone"
+    CONTINUE = "continue"
+    DATABREAKPOINTINFO = "dataBreakpointInfo"
+    DISASSEMBLE = "disassemble"
+    DISCONNECT = "disconnect"
+    EVALUATE = "evaluate"
+    EXCEPTIONINFO = "exceptionInfo"
+    GOTO = "goto"
+    GOTOTARGETS = "gotoTargets"
+    INITIALIZE = "initialize"
+    LAUNCH = "launch"
+    LOADEDSOURCES = "loadedSources"
+    MODULES = "modules"
+    NEXT = "next"
+    PAUSE = "pause"
+    READMEMORY = "readMemory"
+    RESTART = "restart"
+    RESTARTFRAME = "restartFrame"
+    REVERSECONTINUE = "reverseContinue"
+    SCOPES = "scopes"
+    SETBREAKPOINTS = "setBreakpoints"
+    SETDATABREAKPOINTS = "setDataBreakpoints"
+    SETEXCEPTIONBREAKPOINTS = "setExceptionBreakpoints"
+    SETEXPRESSION = "setExpression"
+    SETFUNCTIONBREAKPOINTS = "setFunctionBreakpoints"
+    SETINSTRUCTIONBREAKPOINTS = "setInstructionBreakpoints"
+    SETVARIABLE = "setVariable"
+    SOURCE = "source"
+    STACKTRACE = "stackTrace"
+    STEPBACK = "stepBack"
+    STEPIN = "stepIn"
+    STEPINTARGETS = "stepInTargets"
+    STEPOUT = "stepOut"
+    TERMINATE = "terminate"
+    TERMINATETHREADS = "terminateThreads"
+    THREADS = "threads"
+    VARIABLES = "variables"
+    WRITEMEMORY = "writeMemory"
+
+
+class Events(StrEnum):
+    """Enumeration of DAP events."""
+
+    BREAKPOINT = "breakpoint"
+    CAPABILITIES = "capabilities"
+    CONTINUED = "continued"
+    EXITED = "exited"
+    INITIALIZED = "initialized"
+    INVALIDATED = "invalidated"
+    LOADED_SOURCE = "loadedSource"
+    MEMORY = "memory"
+    MODULE = "module"
+    OUTPUT = "output"
+    PROCESS = "process"
+    PROGRESS_END = "progressEnd"
+    PROGRESS_START = "progressStart"
+    PROGRESS_UPDATE = "progressUpdate"
+    STOPPED = "stopped"
+    TERMINATED = "terminated"
+    THREAD = "thread"

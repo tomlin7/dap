@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 import typing
 
-from .base import DAPMessage, ErrorResponse, Event, Response
-from .requests import Requests
+from .base import DAPMessage, ErrorResponse, Event, Events, Requests, Response
+from .events import *
 from .responses import *
 
 if typing.TYPE_CHECKING:
@@ -55,15 +55,54 @@ class Handler:
                 break
 
     def handle_event(self, event: Event) -> None:
-        print(f"Event {event} received.")
-        return event
+        print(f"🍕 Event {event.event} received.")
+
+        match event.event:
+            case Events.INITIALIZED:
+                return InitializedEvent.model_validate(event.body)
+            case Events.BREAKPOINT:
+                return BreakpointEvent.model_validate(event.body)
+            case Events.CAPABILITIES:
+                return CapabilitiesEvent.model_validate(event.body)
+            case Events.CONTINUED:
+                return ContinuedEvent.model_validate(event.body)
+            case Events.EXITED:
+                return ExitedEvent.model_validate(event.body)
+            case Events.INVALIDATED:
+                return InvalidatedEvent.model_validate(event.body)
+            case Events.LOADED_SOURCE:
+                return LoadedSourceEvent.model_validate(event.body)
+            case Events.MEMORY:
+                return MemoryEvent.model_validate(event.body)
+            case Events.MODULE:
+                return ModuleEvent.model_validate(event.body)
+            case Events.OUTPUT:
+                return OutputEvent.model_validate(event.body)
+            case Events.PROCESS:
+                return ProcessEvent.model_validate(event.body)
+            case Events.PROGRESS_END:
+                return ProgressEndEvent.model_validate(event.body)
+            case Events.PROGRESS_START:
+                return ProgressStartEvent.model_validate(event.body)
+            case Events.PROGRESS_UPDATE:
+                return ProgressUpdateEvent.model_validate(event.body)
+            case Events.STOPPED:
+                return StoppedEvent.model_validate(event.body)
+            case Events.TERMINATED:
+                return TerminatedEvent.model_validate(event.body)
+            case Events.THREAD:
+                return ThreadEvent.model_validate(event.body)
+            case _:
+                # possibly some event specific to the debug adapter
+                print(f"💀 Unsupported event: {event.event}")
+                return event
 
     def handle_response(self, response: Response) -> None:
         assert response.request_seq is not None
         request = self.client._pending_requests.pop(response.request_seq)
 
         if not response.success:
-            print(f"FAIL Request {request} failed: {response.message}")
+            print(f"💀 FAIL Request {request} failed: {response.message}")
             return ErrorResponse.model_validate(response.model_dump())
 
         print(f"SUCCESS Request {request.command}(seq {request.seq}) succeeded")
@@ -154,6 +193,5 @@ class Handler:
             case Requests.WRITEMEMORY:
                 return WriteMemoryResponse.model_validate(response.body)
             case _:
-                raise ValueError(f"Unsupported request: {response.command}")
-
-        return response  # return raw object or raise error?
+                print(f"💀 Unsupported request: {response.command}")
+                return response
