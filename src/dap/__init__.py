@@ -1,4 +1,4 @@
-__version__ = "0.2.10"
+__version__ = "0.4.0"
 __version_info__ = tuple(map(int, __version__.split(".")))
 __author__ = "tomlin7"
 
@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .asynchronous import AsyncConnection, AsyncServer
+from .asyncserver import AsyncServer
 from .client import Client
-from .connection import Connection
-from .server import Server
+from .connection import AsyncConnection, Connection
+from .server import ThreadedServer

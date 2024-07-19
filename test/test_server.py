@@ -1,6 +1,6 @@
-from dap import Server
+from dap import ThreadedServer
 
-server = Server("anyadapter")
+server = ThreadedServer("anyadapter")
 try:
     server.start()
     while True:

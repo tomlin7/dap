@@ -1,12 +1,16 @@
 import threading
-import time
 
 from .client import Client
 from .connection import Connection
 
 
-class Server:
-    """Threaded server implementation of the DAP Client"""
+class ThreadedServer:
+    """Abstract Threaded server implementation of the DAP Client
+
+    It is meant to be used as a base class for creating a server. It handles the connection and the client.
+    Following methods need to be implemented by the child class:
+    - handle_message
+    """
 
     def __init__(self, adapter_id: str, host="localhost", port=6789) -> None:
         """Initializes the server with the given adapter_id, host and port
@@ -37,17 +41,24 @@ class Server:
             ...
 
     def run_single(self):
-        s = self.client.send()
-        if s:
+        if s := self.client.send():
             self.connection.write(s)
 
         r = self.connection.read()
         if not r:
             return False
 
-        if r:
-            result = self.client.receive(r)
-            for r in result:
-                print(r, flush=True)
+        for result in self.client.receive(r):
+            self.handle_message(result)
 
         return True
+
+    def handle_message(self, message):
+        """Handles the message received from the client
+
+        To be implemented by child classes
+        Args:
+            message (Any): The message to handle
+        """
+
+        print(type(message), flush=True)

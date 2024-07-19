@@ -1,8 +1,6 @@
-import json
-import typing
-from typing import Optional
+from typing import Generator, Optional
 
-from .base import Request
+from .base import EventBody, Request, ResponseBody
 from .buffer import RequestBuffer
 from .handler import Handler
 from .requests import AttachRequestArguments, LaunchRequestArguments
@@ -66,9 +64,22 @@ class Client:
             supports_start_debugging_request=True,
         )
 
-    def _send_request(
+    def send_request(
         self, command: str, arguments: Optional[dict[str, Any]] = None
     ) -> int:
+        """Send a request to the debug adapter.
+
+        This can be useful for sending requests that are not yet implemented in the client or
+        for sending custom requests to the debug adapter that are specific to the adapter.
+
+        Args:
+            command: The command to send.
+            arguments: The arguments to send.
+
+        Returns:
+            The sequence number of the request.
+        """
+
         seq = self._seq
         self._seq += 1
 
@@ -78,11 +89,26 @@ class Client:
         )
         return seq
 
-    def receive(self, data: bytes) -> typing.Generator[None, None, None]:
+    def receive(self, data: bytes) -> Generator[ResponseBody | EventBody, None, None]:
+        """Feed data from the debug adapter to the client.
+
+        Args:
+            data: The data to receive.
+
+        Yields:
+            The response or event body.
+        """
+
         self._receive_buf += data
         yield from self.handler.handle()
 
     def send(self) -> bytes:
+        """Get the data to send to the debug adapter.
+
+        Returns:
+            The data to send.
+        """
+
         send_buf = self._send_buf
         self._send_buf = bytearray()
         return send_buf
@@ -96,14 +122,14 @@ class Client:
         - to indicate that it is no longer interested in the result produced by a specific request issued earlier
         - to cancel a progress sequence.
 
-        Both progress_id and request_id can be specified in the same request.
+        Both `progress_id` and `request_id` CAN BE specified in the same request.
 
         Args:
             request_id: The ID (_seq) of the request to cancel. If missing no request is canceled.
             progress_id: The progress ID of the progress sequence to cancel. If missing no progress is canceled.
         """
 
-        return self._send_request(
+        return self.send_request(
             "cancel", {"requestId": request_id, "progressId": progress_id}
         )
 
@@ -114,7 +140,7 @@ class Client:
             __restart: Arbitrary data from the previous, restarted session. \
                 The data is sent as the `restart` attribute of the `terminated` event."""
 
-        return self._send_request("attach", {"__restart": __restart})
+        return self.send_request("attach", {"__restart": __restart})
 
     def breakpoint_locations(
         self,
@@ -134,7 +160,7 @@ class Client:
             end_column: An optional end column of the range covered by the breakpoint.
         """
 
-        return self._send_request(
+        return self.send_request(
             "breakpointLocations",
             {
                 "source": source,
@@ -164,7 +190,7 @@ class Client:
                 completions in the scope of this stack frame.
         """
 
-        return self._send_request(
+        return self.send_request(
             "completions",
             {
                 "frameId": frame_id,
@@ -177,7 +203,7 @@ class Client:
     def configuration_done(self) -> int:
         """This request indicates that the client has finished initialization of the debug adapter."""
 
-        return self._send_request("configurationDone")
+        return self.send_request("configurationDone")
 
     def continue_(self, thread_id: int, single_thread: Optional[bool] = None) -> int:
         """The request resumes execution of all threads.
@@ -188,7 +214,7 @@ class Client:
             single_thread: Execute only this thread.
         """
 
-        return self._send_request(
+        return self.send_request(
             "continue", {"threadId": thread_id, "singleThread": single_thread}
         )
 
@@ -215,7 +241,7 @@ class Client:
             mode: The mode of the desired breakpoint.
         """
 
-        return self._send_request(
+        return self.send_request(
             "dataBreakpointInfo",
             {
                 "variablesReference": variables_reference,
@@ -246,7 +272,7 @@ class Client:
                 to function names and line numbers.
         """
 
-        return self._send_request(
+        return self.send_request(
             "disassemble",
             {
                 "memoryReference": memory_reference,
@@ -272,7 +298,7 @@ class Client:
             suspend_debuggee: Indicates whether the debuggee should be allowed to run after the debugger is disconnected.
         """
 
-        return self._send_request(
+        return self.send_request(
             "disconnect",
             {
                 "restart": restart,
@@ -310,7 +336,7 @@ class Client:
             format: Specifies details on how to format the result.
         """
 
-        return self._send_request(
+        return self.send_request(
             "evaluate",
             {
                 "expression": expression,
@@ -330,7 +356,7 @@ class Client:
             thread_id: Thread for which exception information should be retrieved.
         """
 
-        return self._send_request("exceptionInfo", {"threadId": thread_id})
+        return self.send_request("exceptionInfo", {"threadId": thread_id})
 
     def goto(self, thread_id: int, target_id: str) -> int:
         """The request sets the location where the debuggee will continue to run.
@@ -340,9 +366,7 @@ class Client:
             target_id: The location where the debuggee will continue to run.
         """
 
-        return self._send_request(
-            "goto", {"threadId": thread_id, "targetId": target_id}
-        )
+        return self.send_request("goto", {"threadId": thread_id, "targetId": target_id})
 
     def goto_targets(
         self, source: Source, line: int, column: Optional[int] = None
@@ -355,7 +379,7 @@ class Client:
             column: An optional column for which the goto targets are determined.
         """
 
-        return self._send_request(
+        return self.send_request(
             "gotoTargets", {"source": source, "line": line, "column": column}
         )
 
@@ -380,7 +404,7 @@ class Client:
     ) -> int:
         """Initializes the debug adapter with the client capabilities."""
 
-        return self._send_request(
+        return self.send_request(
             "initialize",
             {
                 "adapterID": adapter_id,
@@ -416,7 +440,7 @@ class Client:
                 The data is sent as the `restart` attribute of the `terminated` event.
         """
 
-        return self._send_request(
+        return self.send_request(
             "launch",
             {"noDebug": no_debug, "__restart": __restart},
         )
@@ -428,7 +452,7 @@ class Client:
             reason: The reason for the event.
         """
 
-        return self._send_request("loadedSources")
+        return self.send_request("loadedSources")
 
     def modules(
         self, start_module: Optional[int] = None, module_count: Optional[int] = None
@@ -442,7 +466,7 @@ class Client:
                 all modules are returned.
         """
 
-        return self._send_request(
+        return self.send_request(
             "modules", {"startModule": start_module, "moduleCount": module_count}
         )
 
@@ -460,7 +484,7 @@ class Client:
             granularity: The granularity of the step, assumed to be 'statement' if not specified.
         """
 
-        return self._send_request(
+        return self.send_request(
             "next",
             {
                 "threadId": thread_id,
@@ -476,7 +500,7 @@ class Client:
             thread_id: The thread to pause.
         """
 
-        return self._send_request("pause", {"threadId": thread_id})
+        return self.send_request("pause", {"threadId": thread_id})
 
     def read_memory(
         self, memory_reference: str, count: int, offset: Optional[int] = None
@@ -489,7 +513,7 @@ class Client:
             offset: The offset (in bytes) of the first byte to read.
         """
 
-        return self._send_request(
+        return self.send_request(
             "readMemory",
             {"memoryReference": memory_reference, "offset": offset, "count": count},
         )
@@ -504,7 +528,7 @@ class Client:
             arguments: Use either arguments for the 'launch' or 'attach' request.
         """
 
-        return self._send_request("restart", arguments)
+        return self.send_request("restart", arguments)
 
     def restart_frame(self, frame_id: int) -> int:
         """Restart the stack frame identified by the given frame ID.
@@ -514,7 +538,7 @@ class Client:
             frame_id: The frame to restart.
         """
 
-        return self._send_request("restartFrame", {"frameId": frame_id})
+        return self.send_request("restartFrame", {"frameId": frame_id})
 
     def reverse_continue(
         self, thread_id: int, single_thread: Optional[bool] = None
@@ -526,7 +550,7 @@ class Client:
             single_thread: If true, backward execution is limited to the specified thread.
         """
 
-        return self._send_request(
+        return self.send_request(
             "reverseContinue",
             {"threadId": thread_id, "singleThread": single_thread},
         )
@@ -538,7 +562,7 @@ class Client:
             frame_id: Retrieve the scopes for this stackframe.
         """
 
-        return self._send_request("scopes", {"frameId": frame_id})
+        return self.send_request("scopes", {"frameId": frame_id})
 
     def set_breakpoints(
         self,
@@ -557,7 +581,7 @@ class Client:
                 which results in new breakpoint locations.
         """
 
-        return self._send_request(
+        return self.send_request(
             "setBreakpoints",
             {
                 "source": source,
@@ -574,7 +598,7 @@ class Client:
             breakpoints: The data breakpoints to set.
         """
 
-        return self._send_request("setDataBreakpoints", {"breakpoints": breakpoints})
+        return self.send_request("setDataBreakpoints", {"breakpoints": breakpoints})
 
     def set_exception_breakpoints(
         self,
@@ -595,7 +619,7 @@ class Client:
             exception_options: An array of ExceptionOptions. Configuration options for selected exceptions.
         """
 
-        return self._send_request(
+        return self.send_request(
             "setExceptionBreakpoints",
             {
                 "filters": filters,
@@ -623,7 +647,7 @@ class Client:
             format: Specifies details on how to format the result.
         """
 
-        return self._send_request(
+        return self.send_request(
             "setExpression",
             {
                 "expression": expression,
@@ -645,9 +669,7 @@ class Client:
             breakpoints: The function breakpoints to set.
         """
 
-        return self._send_request(
-            "setFunctionBreakpoints", {"breakpoints": breakpoints}
-        )
+        return self.send_request("setFunctionBreakpoints", {"breakpoints": breakpoints})
 
     def set_instruction_breakpoints(
         self, breakpoints: List[InstructionBreakpoint]
@@ -661,7 +683,7 @@ class Client:
             breakpoints: The instruction breakpoints to set.
         """
 
-        return self._send_request(
+        return self.send_request(
             "setInstructionBreakpoints", {"breakpoints": breakpoints}
         )
 
@@ -681,7 +703,7 @@ class Client:
             format: Specifies details on how to format the response value.
         """
 
-        return self._send_request(
+        return self.send_request(
             "setVariable",
             {
                 "variablesReference": variables_reference,
@@ -699,7 +721,7 @@ class Client:
             source: Specifies the source content to load. Either `source.path` or `source.sourceReference` must be specified.
         """
 
-        return self._send_request(
+        return self.send_request(
             "source", {"sourceReference": source_reference, "source": source}
         )
 
@@ -721,7 +743,7 @@ class Client:
             format: Specifies details on how to format the stack frames.
         """
 
-        return self._send_request(
+        return self.send_request(
             "stackTrace",
             {
                 "threadId": thread_id,
@@ -750,7 +772,7 @@ class Client:
             granularity: The granularity of the step, assumed to be 'statement' if not specified.
         """
 
-        return self._send_request(
+        return self.send_request(
             "stepBack",
             {
                 "threadId": thread_id,
@@ -784,7 +806,7 @@ class Client:
             granularity: The granularity of the step, assumed to be 'statement' if not specified.
         """
 
-        return self._send_request(
+        return self.send_request(
             "stepIn",
             {
                 "threadId": thread_id,
@@ -802,7 +824,7 @@ class Client:
             frame_id: The stack frame for which to retrieve the possible stepIn targets.
         """
 
-        return self._send_request("stepInTargets", {"frameId": frame_id})
+        return self.send_request("stepInTargets", {"frameId": frame_id})
 
     def step_out(
         self,
@@ -823,7 +845,7 @@ class Client:
             granularity: The granularity of the step, assumed to be 'statement' if not specified.
         """
 
-        return self._send_request(
+        return self.send_request(
             "stepOut",
             {
                 "threadId": thread_id,
@@ -845,7 +867,7 @@ class Client:
             restart: A value of true indicates that this 'terminate' request is part of a restart sequence.
         """
 
-        return self._send_request("terminate", {"restart": restart})
+        return self.send_request("terminate", {"restart": restart})
 
     def terminate_threads(self, thread_ids: List[int]) -> int:
         """The request terminates the threads with the given ids.
@@ -854,7 +876,7 @@ class Client:
             thread_ids: The threads to terminate.
         """
 
-        return self._send_request("terminateThreads", {"threadIds": thread_ids})
+        return self.send_request("terminateThreads", {"threadIds": thread_ids})
 
     def threads(self) -> int:
         """The request retrieves a list of all threads.
@@ -863,7 +885,7 @@ class Client:
             reason: The reason for the event.
         """
 
-        return self._send_request("threads")
+        return self.send_request("threads")
 
     def variables(
         self,
@@ -885,7 +907,7 @@ class Client:
             format: Specifies details on how to format the response value.
         """
 
-        return self._send_request(
+        return self.send_request(
             "variables",
             {
                 "variablesReference": variables_reference,
@@ -913,7 +935,7 @@ class Client:
                 attempt to write memory even if the entire memory region is not writable.
         """
 
-        return self._send_request(
+        return self.send_request(
             "writeMemory",
             {
                 "memoryReference": memory_reference,

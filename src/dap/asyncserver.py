@@ -2,31 +2,7 @@ import asyncio
 from typing import Optional
 
 from .client import Client
-
-
-class AsyncConnection:
-    def __init__(self, host: str, port: int) -> None:
-        self.host = host
-        self.port = port
-        self.reader: Optional[asyncio.StreamReader] = None
-        self.writer: Optional[asyncio.StreamWriter] = None
-        self.alive = False
-
-    async def start(self):
-        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
-        self.alive = True
-
-    async def stop(self):
-        self.writer.close()
-        await self.writer.wait_closed()
-        self.alive = False
-
-    async def write(self, data: bytes):
-        self.writer.write(data)
-        await self.writer.drain()
-
-    async def read(self) -> bytes:
-        return await self.reader.read(1024)
+from .connection import AsyncConnection
 
 
 class AsyncServer:
@@ -60,6 +36,10 @@ class AsyncServer:
             await self.connection.write(s)
 
         r = await self.connection.read()
-        events = self.client.receive(r)
+        for event in self.client.receive(r):
+            self.handle_message(event)
 
         return True
+
+    def handle_message(self, message):
+        print(type(message), flush=True)

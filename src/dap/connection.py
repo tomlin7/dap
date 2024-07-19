@@ -1,8 +1,35 @@
 from __future__ import annotations
 
+import asyncio
 import queue
 import socket
 from threading import Thread
+from typing import Optional
+
+
+class AsyncConnection:
+    def __init__(self, host: str, port: int) -> None:
+        self.host = host
+        self.port = port
+        self.reader: Optional[asyncio.StreamReader] = None
+        self.writer: Optional[asyncio.StreamWriter] = None
+        self.alive = False
+
+    async def start(self):
+        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
+        self.alive = True
+
+    async def stop(self):
+        self.writer.close()
+        await self.writer.wait_closed()
+        self.alive = False
+
+    async def write(self, data: bytes):
+        self.writer.write(data)
+        await self.writer.drain()
+
+    async def read(self) -> bytes:
+        return await self.reader.read(1024)
 
 
 class Connection:

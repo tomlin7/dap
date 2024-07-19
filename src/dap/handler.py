@@ -16,7 +16,7 @@ CONTENT_ENCODING = "utf-8"
 
 
 class Handler:
-    """Handler for DAP events and responses."""
+    """Handler for DAP events, responses and reverse requests."""
 
     def __init__(self, client: Client) -> None:
         self.client = client
@@ -27,7 +27,9 @@ class Handler:
         except ValueError:
             return Event.model_validate(data)
 
-    def handle(self) -> typing.Generator[None, None, None]:
+    def handle(self) -> typing.Generator[EventBody | ResponseBody, None, None]:
+        """Handle incoming messages from the client."""
+
         while b"\r\n\r\n" in self.client._receive_buf:
             headers, rest = self.client._receive_buf.split(b"\r\n\r\n", 1)
 
@@ -47,6 +49,9 @@ class Handler:
                     yield self.handle_event(content)
                 elif message_type == DAPMessage.RESPONSE:
                     yield self.handle_response(content)
+                elif message_type == DAPMessage.REQUEST:
+                    # TODO: Implement reverse request handling
+                    raise ValueError("Request messages are not supported yet")
                 else:
                     raise ValueError(f"Unsupported message: {message_type}")
 
@@ -54,9 +59,7 @@ class Handler:
                 # more data is needed to complete the event
                 break
 
-    def handle_event(self, event: Event) -> None:
-        print(f"🍕 Event {event.event} received.")
-
+    def handle_event(self, event: Event) -> EventBody:
         match event.event:
             case Events.INITIALIZED:
                 return InitializedEvent.model_validate(event.body)
@@ -93,19 +96,20 @@ class Handler:
             case Events.THREAD:
                 return ThreadEvent.model_validate(event.body)
             case _:
-                # possibly some event specific to the debug adapter
-                print(f"💀 Unsupported event: {event.event}")
+                # event specific to the debug adapter
+                # print(f"⚠️ Unsupported event: {event.event}")
                 return event
 
-    def handle_response(self, response: Response) -> None:
+    def handle_response(self, response: Response) -> ResponseBody:
         assert response.request_seq is not None
+
         request = self.client._pending_requests.pop(response.request_seq)
+        assert request is not None
+        assert request.command == response.command
 
         if not response.success:
-            print(f"💀 FAIL Request {request} failed: {response.message}")
+            # print(f"⚠️ FAIL Request failed {request}: {response.message}")
             return ErrorResponse.model_validate(response.model_dump())
-
-        print(f"SUCCESS Request {request.command}(seq {request.seq}) succeeded")
 
         match response.command:
             case Requests.INITIALIZE:
@@ -193,5 +197,6 @@ class Handler:
             case Requests.WRITEMEMORY:
                 return WriteMemoryResponse.model_validate(response.body)
             case _:
-                print(f"💀 Unsupported request: {response.command}")
+                # possibly some request specific to the debug adapter?
+                # print(f"⚠️ Unsupported request: {response.command}")
                 return response
