@@ -4,19 +4,19 @@ from .base import Response, ResponseBody
 from .types import *
 
 
-class CancelResponse(Response):
+class Cancelled(Response):
     """Response to 'cancel' request."""
 
     ...
 
 
-class AttachResponse(Response):
+class Attached(Response):
     """Response to 'attach' request."""
 
     ...
 
 
-class BreakpointLocationsResponseBody(ResponseBody):
+class BreakpointLocationsResponse(ResponseBody):
     """Body of a 'breakpointLocations' response."""
 
     breakpoints: list[BreakpointLocation] = Field(
@@ -24,31 +24,19 @@ class BreakpointLocationsResponseBody(ResponseBody):
     )
 
 
-class BreakpointLocationsResponse(Response):
-    """Response to 'breakpointLocations' request."""
-
-    body: BreakpointLocationsResponseBody
-
-
-class CompletionsResponseBody(ResponseBody):
+class CompletionsResponse(ResponseBody):
     """Body of a 'completions' response."""
 
     targets: list[CompletionItem] = Field(..., description="List of completion items.")
 
 
-class CompletionsResponse(Response):
-    """Response to 'completions' request."""
-
-    body: CompletionsResponseBody
-
-
-class ConfigurationDoneResponse(Response):
+class ConfigurationDone(Response):
     """Response to 'configurationDone' request."""
 
     ...
 
 
-class ContinueResponseBody(ResponseBody):
+class Continued(ResponseBody):
     """Body of a 'continue' response."""
 
     allThreadsContinued: Optional[bool] = Field(
@@ -56,13 +44,7 @@ class ContinueResponseBody(ResponseBody):
     )
 
 
-class ContinueResponse(Response):
-    """Response to 'continue' request."""
-
-    body: ContinueResponseBody
-
-
-class DataBreakpointInfoResponseBody(ResponseBody):
+class DataBreakpointInfoResponse(ResponseBody):
     """Body of a 'dataBreakpoint' response."""
 
     dataId: Optional[str] = Field(
@@ -79,13 +61,7 @@ class DataBreakpointInfoResponseBody(ResponseBody):
     )
 
 
-class DataBreakpointInfoResponse(Response):
-    """Response to 'dataBreakpoint' request."""
-
-    body: DataBreakpointInfoResponseBody
-
-
-class DisassembleResponseBody(ResponseBody):
+class DisassembleResponse(ResponseBody):
     """Body of a 'disassemble' response."""
 
     instructions: list[DisassembledInstruction] = Field(
@@ -93,19 +69,13 @@ class DisassembleResponseBody(ResponseBody):
     )
 
 
-class DisassembleResponse(Response):
-    """Response to 'disassemble' request."""
-
-    body: DisassembleResponseBody
-
-
-class DisconnectResponse(Response):
+class Disconnected(Response):
     """Response to 'disconnect' request."""
 
     ...
 
 
-class EvaluateResponseBody(ResponseBody):
+class EvaluateResponse(ResponseBody):
     """Body of an 'evaluate' response."""
 
     result: str = Field(..., description="The result of the evaluation.")
@@ -128,13 +98,7 @@ class EvaluateResponseBody(ResponseBody):
     )
 
 
-class EvaluateResponse(Response):
-    """Response to 'evaluate' request."""
-
-    body: EvaluateResponseBody
-
-
-class ExceptionInfoResponseBody(ResponseBody):
+class ExceptionInfoResponse(ResponseBody):
     exceptionID: str = Field(..., description="The exception ID.")
     description: Optional[str] = Field(
         None, description="The description of the exception."
@@ -147,57 +111,37 @@ class ExceptionInfoResponseBody(ResponseBody):
     )
 
 
-class ExceptionInfoResponse(Response):
-    """Response to 'exceptionInfo' request."""
-
-    body: ExceptionInfoResponseBody
-
-
-class GotoResponse(Response):
+class GotoDone(Response):
     """Response to 'goto' request."""
 
     ...
 
 
-class GotoTargetsResponseBody(ResponseBody):
+class GotoTargetsResponse(ResponseBody):
     """Body of a 'gotoTargets' response."""
 
     targets: list[GotoTarget] = Field(..., description="List of goto targets.")
 
 
-class GotoTargetsResponse(Response):
-    """Response to 'gotoTargets' request."""
-
-    body: GotoTargetsResponseBody
-
-
-class InitializeResponse(Response):
+class Initialized(Capabilities):
     """Response to 'initialize' request."""
 
-    body: Optional[Capabilities] = Field(
-        None, description="The capabilities of the debug adapter."
-    )
+    ...
 
 
-class LaunchResponse(Response):
+class LaunchDone(Response):
     """Response to 'launch' request."""
 
     ...
 
 
-class LoadedSourcesResponseBody(ResponseBody):
+class LoadedSourcesResponse(ResponseBody):
     """Body of a 'loadedSources' response."""
 
     sources: list[Source] = Field(..., description="List of loaded sources.")
 
 
-class LoadedSourcesResponse(Response):
-    """Response to 'loadedSources' request."""
-
-    body: LoadedSourcesResponseBody
-
-
-class ModulesResponseBody(ResponseBody):
+class ModulesResponse(ResponseBody):
     """Body of a 'modules' response."""
 
     modules: list[Module] = Field(..., description="List of modules.")
@@ -206,25 +150,19 @@ class ModulesResponseBody(ResponseBody):
     )
 
 
-class ModulesResponse(Response):
-    """Response to 'modules' request."""
-
-    body: ModulesResponseBody
-
-
 class NextResponse(Response):
     """Response to 'next' request."""
 
     ...
 
 
-class PauseResponse(Response):
+class Paused(Response):
     """Response to 'pause' request."""
 
     ...
 
 
-class ReadMemoryResponseBody(ResponseBody):
+class ReadMemoryResponse(ResponseBody):
     """Body of a 'readMemory' response."""
 
     address: str = Field(..., description="The address of the memory read.")
@@ -234,67 +172,43 @@ class ReadMemoryResponseBody(ResponseBody):
     data: Optional[str] = Field(None, description="The data read from memory.")
 
 
-class ReadMemoryResponse(Response):
-    """Response to 'readMemory' request."""
-
-    body: ReadMemoryResponseBody
-
-
-class RestartResponse(Response):
+class Restarted(Response):
     """Response to 'restart' request."""
 
     ...
 
 
-class RestartFrameResponse(Response):
+class RestartFrameDone(Response):
     """Response to 'restartFrame' request."""
 
     ...
 
 
-class ReverseContinueResponse(Response):
+class ReverseContinueDone(Response):
     """Response to 'reverseContinue' request."""
 
     ...
 
 
-class ScopesResponseBody(ResponseBody):
+class ScopesResponse(ResponseBody):
     """Body of a 'scopes' response."""
 
     scopes: list[Scope] = Field(..., description="List of scopes.")
 
 
-class ScopesResponse(Response):
-    """Response to 'scopes' request."""
-
-    body: ScopesResponseBody
-
-
-class SetBreakpointsResponseBody(ResponseBody):
+class SetBreakpointsResponse(ResponseBody):
     """Body of a 'setBreakpoints' response."""
 
     breakpoints: list[Breakpoint]
 
 
-class SetBreakpointsResponse(Response):
-    """Response to 'setBreakpoints' request."""
-
-    body: SetBreakpointsResponseBody
-
-
-class SetDataBreakpointsResponseBody(ResponseBody):
+class SetDataBreakpointsResponse(ResponseBody):
     """Body of a 'setDataBreakpoints' response."""
 
     breakpoints: list[Breakpoint]
 
 
-class SetDataBreakpointsResponse(Response):
-    """Response to 'setDataBreakpoints' request."""
-
-    body: SetDataBreakpointsResponseBody
-
-
-class SetExceptionBreakpointsResponseBody(ResponseBody):
+class SetExceptionBreakpointsResponse(ResponseBody):
     """Body of a 'setExceptionBreakpoints' response."""
 
     breakpoints: list[ExceptionBreakpointsFilter]
@@ -303,12 +217,10 @@ class SetExceptionBreakpointsResponseBody(ResponseBody):
 class SetExceptionBreakpointsResponse(Response):
     """Response to 'setExceptionBreakpoints' request."""
 
-    body: Optional[SetExceptionBreakpointsResponseBody] = Field(
-        None, description="The exception breakpoints."
-    )
+    ...
 
 
-class SetExpressionResponseBody(ResponseBody):
+class SetExpressionResponse(ResponseBody):
     """Body of a 'setExpression' response."""
 
     value: str = Field(..., description="The value of the expression.")
@@ -331,7 +243,7 @@ class SetExpressionResponseBody(ResponseBody):
     )
 
 
-class SetFunctionBreakpointsResponseBody(ResponseBody):
+class SetFunctionBreakpointsResponse(ResponseBody):
     """Body of a 'setFunctionBreakpoints' response."""
 
     breakpoints: list[FunctionBreakpoint] = Field(
@@ -339,25 +251,13 @@ class SetFunctionBreakpointsResponseBody(ResponseBody):
     )
 
 
-class SetFunctionBreakpointsResponse(Response):
-    """Response to 'setFunctionBreakpoints' request."""
-
-    body: SetFunctionBreakpointsResponseBody
-
-
-class SetInstructionBreakpointsResponseBody(ResponseBody):
+class SetInstructionBreakpointsResponse(ResponseBody):
     """Body of a 'setInstructionBreakpoints' response."""
 
     breakpoints: list[Breakpoint]
 
 
-class SetInstructionBreakpointsResponse(Response):
-    """Response to 'setInstructionBreakpoints' request."""
-
-    body: SetInstructionBreakpointsResponseBody
-
-
-class SetVariableResponseBody(ResponseBody):
+class SetVariableResponse(ResponseBody):
     """Body of a 'setVariable' response."""
 
     value: str = Field(..., description="The value of the variable.")
@@ -377,105 +277,69 @@ class SetVariableResponseBody(ResponseBody):
     )
 
 
-class SetVariableResponse(Response):
-    """Response to 'setVariable' request."""
-
-    body: SetVariableResponseBody
-
-
-class SourceResponseBody(ResponseBody):
+class SourceResponse(ResponseBody):
     """Body of a 'source' response."""
 
     content: str = Field(..., description="The content of the source.")
     mimeType: Optional[str] = Field(None, description="The MIME type of the source.")
 
 
-class SourceResponse(Response):
-    """Response to 'source' request."""
-
-    body: SourceResponseBody
-
-
-class StackTraceResponseBody(ResponseBody):
+class StackTraceResponse(ResponseBody):
     """Body of a 'stackTrace' response."""
 
     stackFrames: list[StackFrame] = Field(..., description="List of stack frames.")
     totalFrames: Optional[int] = Field(None, description="The total number of frames.")
 
 
-class StackTraceResponse(Response):
-    """Response to 'stackTrace' request."""
-
-    body: StackTraceResponseBody
-
-
-class StepBackResponse(Response):
+class StepBackDone(Response):
     """Response to 'stepBack' request."""
 
     ...
 
 
-class StepInResponse(Response):
+class StepInDone(Response):
     """Response to 'stepIn' request."""
 
     ...
 
 
-class StepInTargetsResponseBody(ResponseBody):
+class StepInTargetsResponse(ResponseBody):
     """Body of a 'stepInTargets' response."""
 
     targets: list[StepInTarget] = Field(..., description="List of step in targets.")
 
 
-class StepInTargetsResponse(Response):
-    """Response to 'stepInTargets' request."""
-
-    body: StepInTargetsResponseBody
-
-
-class StepOutResponse(Response):
+class StepOutDone(Response):
     """Response to 'stepOut' request."""
 
     ...
 
 
-class TerminateResponse(Response):
+class Terminated(Response):
     """Response to 'terminate' request."""
 
     ...
 
 
-class TerminateThreadsResponse(Response):
+class TerminateThreadsDone(Response):
     """Response to 'terminateThreads' request."""
 
     ...
 
 
-class ThreadsResponseBody(ResponseBody):
+class ThreadsResponse(ResponseBody):
     """Body of a 'threads' response."""
 
     threads: list[Thread] = Field(..., description="List of threads.")
 
 
-class ThreadsResponse(Response):
-    """Response to 'threads' request."""
-
-    body: ThreadsResponseBody
-
-
-class VariablesResponseBody(ResponseBody):
+class VariablesResponse(ResponseBody):
     """Body of a 'variables' response."""
 
     variables: list[Variable] = Field(..., description="List of variables.")
 
 
-class VariablesResponse(Response):
-    """Response to 'variables' request."""
-
-    body: VariablesResponseBody
-
-
-class WriteMemoryResponseBody(ResponseBody):
+class WriteMemoryResponse(ResponseBody):
     """Body of a 'writeMemory' response."""
 
     offset: Optional[int] = Field(None, description="The offset of the memory write.")

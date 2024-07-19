@@ -1,7 +1,10 @@
 import json
+import typing
 from typing import Optional
 
+from .base import Request
 from .buffer import RequestBuffer
+from .handler import Handler
 from .requests import AttachRequestArguments, LaunchRequestArguments
 from .types import *
 
@@ -40,7 +43,9 @@ class Client:
         self._seq: int = 1
         self._send_buf = bytearray()
         self._receive_buf = bytearray()
-        self._pending_requests = {}
+        self._pending_requests: dict[int, Request] = {}
+
+        self.handler = Handler(self)
 
         self.initialize(
             adapter_id=adapter_id,
@@ -67,34 +72,15 @@ class Client:
         seq = self._seq
         self._seq += 1
 
-        self._pending_requests[seq] = command
         self._send_buf += RequestBuffer(seq, command, arguments)
+        self._pending_requests[seq] = Request(
+            seq=seq, command=command, arguments=arguments
+        )
         return seq
 
-    def receive(self, data: bytes) -> list[dict]:
+    def receive(self, data: bytes) -> typing.Generator[None, None, None]:
         self._receive_buf += data
-        events = []
-        while b"\r\n\r\n" in self._receive_buf:
-            headers, content = self._receive_buf.split(b"\r\n\r\n", 1)
-            content_length = int(headers.decode().split(":")[1].strip())
-            if len(content) >= content_length:
-                event_data = content[:content_length]
-                self._receive_buf = content[content_length:]
-                event = json.loads(event_data)
-                events.append(self._handle_event(event))
-            else:
-                break
-        return events
-
-    def _handle_event(self, event: dict) -> dict:
-        if event["type"] == "response":
-            request_seq = event["request_seq"]
-            if request_seq in self._pending_requests:
-                command = self._pending_requests.pop(request_seq)
-                print(f"Received response for {command}: ", json.dumps(event, indent=2))
-        elif event["type"] == "event":
-            print(f"Received event: ", json.dumps(event, indent=2))
-        return event
+        yield from self.handler.handle()
 
     def send(self) -> bytes:
         send_buf = self._send_buf

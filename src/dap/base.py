@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
@@ -15,7 +16,7 @@ class ProtocolMessage(BaseModel):
 
 
 class Request(ProtocolMessage):
-    type: str = "request"
+    type: str = "request"  # type: ignore
     command: str = Field(..., description="The command to execute.")
     arguments: Optional[Any] = Field(
         None, description="Object containing arguments for the command."
@@ -29,7 +30,7 @@ class Event(ProtocolMessage):
 
 
 class ResponseBody(BaseModel):
-    """Body of a response message."""
+    """Base class of response bodies"""
 
     ...
 
@@ -46,7 +47,7 @@ class Response(ProtocolMessage):
     message: Optional[Literal["cancelled", "notStopped"] | str] = Field(
         None, description="Raw error message if success is False."
     )
-    body: Optional[ResponseBody] = Field(
+    body: Optional[dict[str, Any] | Any] = Field(
         None, description="Request result if success is true, error details otherwise."
     )
 
@@ -62,4 +63,7 @@ class ErrorResponse(Response):
     body: ErrorBody = Field(..., description="A structured error message.")
 
 
-DAPMessage = Request | Response | Event
+class DAPMessage(StrEnum):
+    REQUEST = "request"
+    RESPONSE = "response"
+    EVENT = "event"

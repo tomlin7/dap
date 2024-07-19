@@ -34,7 +34,7 @@ class Server:
 
     def _run_loop(self):
         while self.running and self.connection.alive and self.run_single():
-            time.sleep(0.1)
+            ...
 
     def run_single(self):
         s = self.client.send()
@@ -46,7 +46,8 @@ class Server:
             return False
 
         if r:
-            events = self.client.receive(r)
-            # print(events)
+            result = self.client.receive(r)
+            for r in result:
+                print(r, flush=True)
 
         return True
