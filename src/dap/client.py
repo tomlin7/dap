@@ -446,11 +446,7 @@ class Client:
         )
 
     def loaded_sources(self) -> int:
-        """Retrieves the set of all sources currently loaded by the debugged process.
-
-        Args:
-            reason: The reason for the event.
-        """
+        """Retrieves the set of all sources currently loaded by the debugged process."""
 
         return self.send_request("loadedSources")
 
@@ -879,11 +875,7 @@ class Client:
         return self.send_request("terminateThreads", {"threadIds": thread_ids})
 
     def threads(self) -> int:
-        """The request retrieves a list of all threads.
-
-        Args:
-            reason: The reason for the event.
-        """
+        """The request retrieves a list of all threads."""
 
         return self.send_request("threads")
 
