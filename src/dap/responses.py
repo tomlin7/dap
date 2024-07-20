@@ -3,7 +3,46 @@ from pydantic import Field
 from .base import Response, ResponseBody
 from .types import *
 
+# Reverse Request Responses
 
+
+class RunInTerminalResponseBody(ResponseBody):
+    """Body of a 'runInTerminal' response."""
+
+    processId: Optional[int] = Field(
+        None, description="The process ID of the terminal."
+    )
+    shellProcessId: Optional[int] = Field(
+        None, description="The process ID of the shell."
+    )
+
+
+class RunInTerminalResponse(Response):
+    """Response to 'runInTerminal' request."""
+
+    request_seq: int = Field(
+        ..., description="Sequence number of the corresponding request."
+    )
+    success: bool = Field(
+        ..., description="Indicates whether the request was successful."
+    )
+    command: str = "runInTerminal"
+    body: RunInTerminalResponseBody
+
+
+class StartDebuggingResponse(Response):
+    """Body of a 'startDebugging' response."""
+
+    request_seq: int = Field(
+        ..., description="Sequence number of the corresponding request."
+    )
+    success: bool = Field(
+        ..., description="Indicates whether the request was successful."
+    )
+    command: str = "startDebugging"
+
+
+# Request Responses
 class Cancelled(Response):
     """Response to 'cancel' request."""
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import StrEnum
 from typing import Any, Literal, Optional
 
@@ -15,12 +17,22 @@ class ProtocolMessage(BaseModel):
     )
 
 
+class RequestArguments(BaseModel):
+    """Base class of request arguments"""
+
+
 class Request(ProtocolMessage):
     type: str = "request"  # type: ignore
     command: str = Field(..., description="The command to execute.")
     arguments: Optional[Any] = Field(
         None, description="Object containing arguments for the command."
     )
+
+    def reply(self, *a, **kw) -> Response:
+        """Create a response message for the request.
+
+        This method is for reverse requests only."""
+        ...
 
 
 class EventBody(BaseModel):
@@ -122,6 +134,10 @@ class Requests(StrEnum):
     THREADS = "threads"
     VARIABLES = "variables"
     WRITEMEMORY = "writeMemory"
+
+    # Reverse requests
+    RUNINTERMINAL = "runInTerminal"
+    STARTDEBUGGING = "startDebugging"
 
 
 class Events(StrEnum):

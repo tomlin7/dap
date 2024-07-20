@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import typing
 
-from .base import DAPMessage, ErrorResponse, Event, Events, Requests, Response
+from .base import DAPMessage, ErrorResponse, Event, Events, Request, Requests, Response
 from .events import *
+from .requests import *
 from .responses import *
 
 if typing.TYPE_CHECKING:
@@ -50,8 +51,7 @@ class Handler:
                 elif message_type == DAPMessage.RESPONSE:
                     yield self.handle_response(content)
                 elif message_type == DAPMessage.REQUEST:
-                    # TODO: Implement reverse request handling
-                    raise ValueError("Request messages are not supported yet")
+                    yield self.handle_reverse_request(content)
                 else:
                     raise ValueError(f"Unsupported message: {message_type}")
 
@@ -59,7 +59,21 @@ class Handler:
                 # more data is needed to complete the event
                 break
 
+    def handle_reverse_request(self, request: Request) -> ResponseBody:
+        assert request.command is not None
+
+        match request.command:
+            case Requests.RUNINTERMINAL:
+                return RunInTerminalRequest.model_validate(request)
+            case Requests.STARTDEBUGGING:
+                return StartDebuggingRequest.model_validate(request)
+            case _:
+                # print(f"⚠️ Unsupported reverse request: {request.command}")
+                return request
+
     def handle_event(self, event: Event) -> EventBody:
+        assert event.event is not None
+
         match event.event:
             case Events.INITIALIZED:
                 return InitializedEvent.model_validate(event.body)
@@ -101,6 +115,7 @@ class Handler:
                 return event
 
     def handle_response(self, response: Response) -> ResponseBody:
+        assert response.command is not None
         assert response.request_seq is not None
 
         request = self.client._pending_requests.pop(response.request_seq)

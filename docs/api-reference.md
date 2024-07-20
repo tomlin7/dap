@@ -12,6 +12,10 @@
 
 ::: dap.events
 
+## Requests
+
+::: dap.requests
+
 ## Base Protocol
 
 ::: dap.base
