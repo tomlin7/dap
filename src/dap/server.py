@@ -28,10 +28,14 @@ class ThreadedServer:
         self.running = False
 
     def start(self):
+        """Starts the server"""
+
         self.running = True
         threading.Thread(target=self._run_loop, daemon=True).start()
 
     def stop(self):
+        """Stops the server"""
+
         self.running = False
         self.client.terminate()
         self.connection.stop()

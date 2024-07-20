@@ -1,4 +1,4 @@
-# DAP Client: Debug Adapter Protocol Client for Python
+# Debug Adapter Client for Python
 
 DAP Client is an up-to-date generic client side implementation of the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) that is used in IDEs, editors and other tools to communicate with different debuggers. The client is not tied to any specific debugger, so it can be used to interact with any debug adapter that implements the DAP protocol, significantly reducing the effort required to build a new debugging tool.
 
@@ -112,4 +112,4 @@ asyncio.run(debug_session())
 
 ## License
 
-DAP Client is released under the [MIT License](./LICENSE).
+DAP Client is released under the [MIT License](../LICENSE).
