@@ -6,6 +6,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://tomlin7.github.io/dap/LICENSE/</loc>
+         <lastmod>2024-07-20</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://tomlin7.github.io/dap/api-reference/</loc>
          <lastmod>2024-07-20</lastmod>
          <changefreq>daily</changefreq>
