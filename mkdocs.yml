@@ -23,6 +23,9 @@ theme:
       toggle:
         icon: material/weather-night
         name: Switch to light mode
+  features:
+    - navigation.top
+    - toc.follow
 
 plugins:
   - mkdocstrings:
@@ -36,3 +39,9 @@ plugins:
 nav:
   - Home: index.md
   - API Reference: api-reference.md
+  - License: LICENSE.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tomlin7/dap

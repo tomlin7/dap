@@ -21,7 +21,7 @@ DAP Client is an up-to-date generic client side implementation of the [Debug Ada
 Install DAP Client using pip:
 
 ```bash
-pip install dap-client
+pip install dap-python
 ```
 
 ## Quick Start
