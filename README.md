@@ -1,6 +1,6 @@
-# DAP Client: Debug Adapter Protocol Client for Python
+# [DAP Client: Debug Adapter Protocol Client for Python](https://tomlin7.github.io/dap/api-reference/)
 
-DAP Client is an up-to-date generic client side implementation of the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) that is used in IDEs, editors and other tools to communicate with different debuggers. The client is not tied to any specific debugger, so it can be used to interact with any debug adapter that implements the DAP protocol, significantly reducing the effort required to build a new debugging tool.
+DAP Client is an up-to-date generic client side implementation of the [Debug Adapter Protocol (DAP)](https://microsoft.github.io/debug-adapter-protocol/) that is used in IDEs, editors and other tools to communicate with different debuggers. The client is not tied to any specific debugger, so it can be used to interact with any debug adapter that implements the DAP protocol, significantly reducing the effort required to build a new debugging tool. For a list of supported debug adapters, see the [official specification](https://microsoft.github.io/debug-adapter-protocol/implementors/adapters/).
 
 ## Key Features
 
@@ -13,7 +13,7 @@ DAP Client is an up-to-date generic client side implementation of the [Debug Ada
 1. [Installation](#installation)
 2. [Quick Start](#quick-start)
 3. [Usage Examples](#usage-examples)
-4. [API Reference](#api-reference)
+4. [API Reference](https://tomlin7.github.io/dap/api-reference/)
 5. [License](#license)
 
 ## Installation
